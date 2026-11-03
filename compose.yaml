@@ -1,0 +1,43 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cleanviet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cleanviet_local_change_me}
+      POSTGRES_DB: ${POSTGRES_DB:-cleanviet}
+    ports:
+      - "127.0.0.1:5436:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  seed:
+    build: .
+    command: ["python", "seed_data.py"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cleanviet}:${POSTGRES_PASSWORD:-cleanviet_local_change_me}@db:5432/${POSTGRES_DB:-cleanviet}
+    depends_on:
+      db:
+        condition: service_healthy
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:${CLEANVIET_PORT:-8017}:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cleanviet}:${POSTGRES_PASSWORD:-cleanviet_local_change_me}@db:5432/${POSTGRES_DB:-cleanviet}
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+volumes:
+  pgdata:
