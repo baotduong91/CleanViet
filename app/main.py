@@ -27,13 +27,45 @@ app.add_middleware(
 DB = Depends(session_dependency)
 
 
+def _request_hostname(host_header: str | None) -> str | None:
+    if not host_header:
+        return None
+    if host_header.startswith("["):
+        end = host_header.find("]")
+        return host_header[1:end] if end > 0 else host_header
+    return host_header.rsplit(":", 1)[0]
+
+
+def _write_origin_permitted(origin: str | None, host: str | None) -> bool:
+    """Allow writes from trusted frontends (incl. Vite proxy on another port)."""
+    trusted = set(settings.trusted_hosts)
+    if not origin:
+        return True
+    parsed = urlparse(origin)
+    if parsed.scheme not in ("http", "https"):
+        return False
+    origin_host = parsed.hostname
+    if not origin_host or origin_host not in trusted:
+        return False
+    request_host = _request_hostname(host)
+    if request_host and request_host not in trusted and request_host != origin_host:
+        return False
+    return True
+
+
 @app.middleware("http")
 async def browser_security(request: Request, call_next):
     if request.method not in ("GET", "HEAD", "OPTIONS"):
         origin = request.headers.get("origin")
-        if request.headers.get("sec-fetch-site") == "cross-site" or (
-            origin and urlparse(origin).netloc != request.headers.get("host")
-        ):
+        host = request.headers.get("host")
+        cross_site = request.headers.get("sec-fetch-site") == "cross-site"
+        if cross_site:
+            if not origin or not _write_origin_permitted(origin, host):
+                return JSONResponse(
+                    {"detail": "Cross-origin writes are not permitted."},
+                    status_code=403,
+                )
+        elif origin and not _write_origin_permitted(origin, host):
             return JSONResponse(
                 {"detail": "Cross-origin writes are not permitted."}, status_code=403
             )
@@ -73,6 +105,14 @@ async def health(session: AsyncSession = DB):
 
 
 app.include_router(router)
+
+DISH_MEDIA = Path(__file__).resolve().parent.parent / "data" / "dish_images"
+try:
+    DISH_MEDIA.mkdir(parents=True, exist_ok=True)
+except OSError:
+    pass
+if DISH_MEDIA.is_dir():
+    app.mount("/media/dishes", StaticFiles(directory=DISH_MEDIA), name="dish_images")
 
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if DIST.exists():

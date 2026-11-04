@@ -11,9 +11,9 @@ async def migrate():
         settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
     )
     try:
-        await connection.execute(
-            (Path(__file__).parent / "migrations/002_meal_canvas.sql").read_text()
-        )
+        root = Path(__file__).parent
+        for name in ("002_meal_canvas.sql", "003_cookbook_saved.sql"):
+            await connection.execute((root / "migrations" / name).read_text())
     finally:
         await connection.close()
     print("Meal canvas migration applied.")

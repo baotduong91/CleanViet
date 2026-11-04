@@ -9,3 +9,7 @@ frontend/dist/
 .env.*
 !.env.example
 .vercel/
+data/
+venv/
+.DS_Store
+**/.DS_Store

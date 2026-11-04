@@ -1,33 +1,443 @@
-import React,{useEffect,useState} from 'react';
-import {createRoot} from 'react-dom/client';
-import {Sprout,Plus,X,ShoppingBag,Search,Sun,Moon,Check,ArrowRight,TrainFront,Home,LoaderCircle,ChevronDown} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import {
+  Sprout,
+  X,
+  ShoppingBag,
+  Sun,
+  Moon,
+  Check,
+  ArrowRight,
+  LoaderCircle,
+} from 'lucide-react';
 import './styles.css';
-const days=['Monday','Tuesday','Wednesday','Thursday'];
-const empty=()=>days.map(day=>({day,dish_name:'',ingredients:[],toddler_tip:'',parser_note:''}));
-const money=n=>n==null?'Unpriced':new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n);
-function monday(){const d=new Date();d.setDate(d.getDate()-(d.getDay()+6)%7);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-async function api(url,method='GET',body){const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw new Error(typeof d.detail==='string'?d.detail:Array.isArray(d.detail)?d.detail.map(e=>e.msg).join('; '):'Request failed.');return d}
-function App(){
- const [week,setWeek]=useState(monday()),[meals,setMeals]=useState(empty),[revision,setRevision]=useState(0),[loadedWeek,setLoadedWeek]=useState(monday()),[checked,setChecked]=useState([]),[shopping,setShopping]=useState(null),[favorites,setFavorites]=useState([]),[history,setHistory]=useState([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[dirty,setDirty]=useState(false),[query,setQuery]=useState(''),[results,setResults]=useState(null),[intel,setIntel]=useState({}),[target,setTarget]=useState(0),[dark,setDark]=useState(()=>localStorage.getItem('cv-theme')==='dark');
- useEffect(()=>{document.documentElement.dataset.theme=dark?'dark':'light';localStorage.setItem('cv-theme',dark?'dark':'light')},[dark]);
- useEffect(()=>{api('/api/meals/history').then(d=>{setFavorites(d.favorites);setHistory(d.past_meals)}).catch(e=>setError(e.message))},[]);
- async function work(fn){setBusy(true);setError('');setMessage('');try{await fn()}catch(e){setError(e.message)}finally{setBusy(false)}}
- async function load(value=week){await work(async()=>{const d=await api(`/api/canvas?week_start=${value}`);setWeek(value);setLoadedWeek(value);setMeals(d.meals.length?days.map(day=>d.meals.find(m=>m.day===day)):empty());setRevision(d.revision);setChecked(d.checked);setShopping(d.shopping);setDirty(false);setIntel({})})}
- useEffect(()=>{load()},[]);
- function update(i,patch){setMeals(ms=>ms.map((m,j)=>i===j?{...m,...patch}:m));setDirty(true)}
- async function parse(i,name=meals[i].dish_name){await work(async()=>{const d=await api('/api/meals/parse-ingredients','POST',{dish_name:name});update(i,{...d});setMessage('Suggestions added. Edit ingredients, amounts and toddler notes to fit your meal.')})}
- async function save(nextChecked=checked){await work(async()=>{if(week!==loadedWeek)throw new Error("Load the selected week before saving or changing shopping checks.");const d=await api('/api/canvas','PUT',{week_start:week,revision,meals,checked:nextChecked});setRevision(d.revision);setShopping(d.shopping);setChecked(d.checked);setDirty(false);setMessage('Four dinners confirmed. Your shopping list is saved.');const h=await api('/api/meals/history');setHistory(h.past_meals)})}
- async function toggle(id){const next=checked.includes(id)?checked.filter(k=>k!==id):[...checked,id];await save(next)}
- function editIngredient(i,j,patch){update(i,{ingredients:meals[i].ingredients.map((x,k)=>j===k?{...x,...patch}:x)})}
- async function review(id){await work(async()=>{const d=await api(`/api/stores/${id}/community`);setIntel(s=>({...s,[id]:d}))})}
- return <div className="page"><header><a href="/" className="brand"><span><Sprout size={25}/></span>cleanviet<small>the family meal canvas</small></a><div className="header-actions"><span className="local">● Your local kitchen</span><button className="icon" onClick={()=>setDark(!dark)} aria-label={dark?'Use light mode':'Use dark mode'}>{dark?<Sun size={19}/>:<Moon size={19}/>}</button></div></header>
- <main><section className="intro"><div className="eyebrow">LESS PLANNING. MORE LIVING.</div><h1>Four nights. Anything you’re craving.</h1><p>A Vietnamese soup, a favorite pasta, a quick salmon dinner. Make this week yours.</p><div className="week-controls"><label>Week of <input type="date" value={week} onChange={e=>setWeek(e.target.value)}/></label><button onClick={()=>load()} disabled={busy}>Load week</button><span>Friday gathering · Weekends out</span></div></section>
- {error&&<div className="alert error" role="alert">{error}<button className="icon" aria-label="Dismiss error" onClick={()=>setError('')}><X size={17}/></button></div>}{message&&<div className="alert" role="status"><Check size={17}/>{message}</div>}
- <section className="favorite-strip"><div><Sprout size={18}/><strong>Family favorites</strong><span>Start with something familiar.</span></div><div className="favorite-tools"><label>Add to <select value={target} onChange={e=>setTarget(Number(e.target.value))}>{days.map((day,i)=><option key={day} value={i}>{day}</option>)}</select></label><div className="favorite-chips">{favorites.map(f=><button disabled={busy} onClick={()=>parse(target,f)} key={f}><Plus size={13}/>{f}</button>)}</div></div></section>
- <div className="canvas-heading"><h2>Your dinner canvas</h2><span>Family dinner · 2 adults + a little explorer</span></div><section className="canvas">{meals.map((meal,i)=><article className="meal" key={meal.day}><div className="day-title"><span className="day-number">0{i+1}</span><h2>{meal.day}</h2></div><span className={`day-badge ${i===2?'wfh':''}`}>{i===2?<Home size={12}/>:<TrainFront size={12}/>} {i===2?'WFH · Flexible Prep':'Commute Day · Fast Prep / <20 mins'}</span><label className="dish-label" htmlFor={`dish-${i}`}>What sounds good?</label><textarea id={`dish-${i}`} value={meal.dish_name} maxLength={200} placeholder="Type any dish…" onChange={e=>update(i,{dish_name:e.target.value})}/><input className="history-input" aria-label={`Past meal for ${meal.day}`} list="past-meals" placeholder="Or search past meals" onChange={e=>{if(e.target.value)update(i,{dish_name:e.target.value})}}/><button className="parse-button" disabled={busy||!meal.dish_name.trim()} onClick={()=>parse(i)}>{busy?<LoaderCircle size={14} className="spin"/>:<Plus size={14}/>} Suggest ingredients</button><div className="ingredients-title">GROCERY TAGS <span>{meal.ingredients.length}</span></div><div className="ingredient-list">{meal.ingredients.map((item,j)=><div className="ingredient-row" key={j}><input aria-label={`${meal.day} ingredient ${j+1}`} value={item.name} maxLength={120} onChange={e=>editIngredient(i,j,{name:e.target.value,ingredient_id:null})}/><input type="number" min="0.001" max="1000" step="0.001" aria-label={`${meal.day} quantity ${j+1}`} value={item.quantity} onChange={e=>editIngredient(i,j,{quantity:e.target.value})}/><select aria-label={`${meal.day} unit ${j+1}`} value={item.unit} onChange={e=>editIngredient(i,j,{unit:e.target.value})}>{['lb','L','each'].map(u=><option key={u}>{u}</option>)}</select><button className="icon" aria-label={`Remove ${item.name}`} onClick={()=>update(i,{ingredients:meal.ingredients.filter((_,k)=>k!==j)})}><X size={12}/></button></div>)}</div><button className="add-item" onClick={()=>update(i,{ingredients:[...meal.ingredients,{name:'',quantity:1,unit:'lb',ingredient_id:null}]})}><Plus size={13}/> Add ingredient manually</button><p className="parser-note">{meal.parser_note||'Any cuisine is welcome. Suggestions are editable.'}</p><div className="toddler"><label htmlFor={`tip-${i}`}>LITTLE BOWL, SAME DINNER</label><textarea id={`tip-${i}`} value={meal.toddler_tip} maxLength={1000} placeholder="Your toddler tweak…" onChange={e=>update(i,{toddler_tip:e.target.value})}/></div></article>)}</section><datalist id="past-meals">{history.map(h=><option key={h} value={h}/>)}</datalist>
- <div className="confirm-bar"><p>{week!==loadedWeek?'Load the selected week before editing or confirming it.':dirty?'You have unsaved changes. Confirm to update the shopping list.':'Choose four dinners, review the suggestions, then confirm.'}<small>Commute badges are helpful reminders. No meal is blocked by cuisine, timing or repetition.</small></p><button className="primary" disabled={busy||week!==loadedWeek||meals.some(m=>!m.dish_name.trim()||m.ingredients.some(x=>!x.name.trim()||!(Number(x.quantity)>0)))} onClick={()=>save()}>{busy?<LoaderCircle size={17} className="spin"/>:<ShoppingBag size={17}/>} Confirm 4 dishes <ArrowRight size={16}/></button></div>
- <section className="shopping"><div className="section-heading"><div className="eyebrow">A SMARTER RUN, A LIGHTER BASKET</div><h2>Where to shop this week</h2><p>Specialty picks for Little Saigon, bulk staples closer to home, and a cupboard check first.</p></div><form className="intel-search" onSubmit={e=>{e.preventDefault();work(async()=>{const d=await api(`/api/stores/intel?q=${encodeURIComponent(query)}`);setResults(d.matches)})}}><Search size={19}/><input aria-label="Check Item / Supermarket Intel" value={query} maxLength={120} required placeholder="Check Item / Supermarket Intel — try Mực trứng or Nấm đùi gà" onChange={e=>setQuery(e.target.value)}/><button disabled={busy} type="submit">Check item <ArrowRight size={14}/></button></form>{results&&<div className="search-results">{results.length?results.map(r=><div key={r.ingredient.id}><strong>{r.ingredient.name}</strong><span>{r.store.name} · {r.store.specialty}</span><small>Estimated {money(r.ingredient.local_price)} / {r.ingredient.unit} vs. Weee! {money(r.ingredient.weee_price)}. {r.basis}</small></div>):<p>No reliable specialty match. Compare your usual supermarket; add this item manually to any meal.</p>}</div>}
- {shopping?<><div className="budget"><div><span>ESTIMATED REMAINING INGREDIENTS</span><strong>{money(shopping.estimated_cost)}</strong></div><div><span>COMPARABLE WEEE! QUANTITIES</span><strong>{money(shopping.estimated_weee)}</strong></div><div><span>ESTIMATED DIFFERENCE</span><strong>{money(shopping.estimated_savings)}</strong></div></div><p className="basis">{shopping.basis} {shopping.unpriced_items>0&&`${shopping.unpriced_items} custom item(s) are unpriced and excluded from totals.`} {dirty&&'The list reflects your last confirmed dishes.'}</p><div className="routes">{shopping.routes.map((route,i)=><section className="route" key={route.id}><div className="route-header"><span>0{i+1}</span><div><h3>{route.name}</h3><p>{route.note}</p></div></div>{route.stores.length?route.stores.map(store=><article className="store" key={store.id}><h4>{store.name}</h4><p>{store.specialty}</p><div className="intel-badge"><span className="intel-label">COMMUNITY INTEL · {intel[store.id]?.status==='live'?'GOOGLE MAPS REVIEW SAMPLE':'SPECIALTY HEURISTIC'}</span><p>{intel[store.id]?.summary||'Household specialty recommendation. Current quality, best price and stock are unverified.'}</p>{store.query&&<button disabled={busy} onClick={()=>review(store.id)}>Check recent reviews <ArrowRight size={12}/></button>}{intel[store.id]?.place_name&&<p>{intel[store.id].place_name} · {intel[store.id].address} <a href={intel[store.id].url} target="_blank" rel="noreferrer">Google Maps ↗</a></p>}{intel[store.id]?.reviews?.map((r,j)=><div className="review" key={j}><a href={r.author_url||r.url} target="_blank" rel="noreferrer">{r.author}</a> · {r.published_at.slice(0,10)}<p>“{r.excerpt}”</p><a href={r.url} target="_blank" rel="noreferrer">Read review ↗</a></div>)}</div><div className="shop-items">{store.items.map(item=><label className={`shop-item ${item.checked?'covered':''}`} key={item.id}><input type="checkbox" checked={item.checked} disabled={busy||dirty} onChange={()=>toggle(item.id)}/><span>{item.name}<small>{Number(item.quantity)} {item.unit}</small></span><strong>{money(item.estimated_cost)}</strong></label>)}</div></article>):<p className="empty-route">No items needed for this run.</p>}</section>)}</div></>:<div className="empty-shopping"><ShoppingBag size={30}/><h3>Your next grocery run starts here.</h3><p>Confirm your four dishes to combine ingredients and find the right specialty stops.</p></div>}</section><footer><Sprout size={16}/> A little structure. Plenty of freedom.<span>CleanViet · Your family, your food.</span></footer></main></div>
+import { MealCard } from './components/MealCard.jsx';
+import { ShoppingSection } from './components/ShoppingSection.jsx';
+import { TodaysModeWidget } from './components/TodaysModeWidget.jsx';
+import { CookbookBar } from './components/CookbookBar.jsx';
+import {
+  defaultPreferences,
+  loadWeekState,
+  persistWeekState,
+} from './utils/persistence.js';
+
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+const empty = () =>
+  days.map((day) => ({
+    day,
+    dish_name: '',
+    ingredients: [],
+    toddler_tip: '',
+    parser_note: '',
+  }));
+
+function monday() {
+  const d = new Date();
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-createRoot(document.getElementById('root')).render(<App/>);
-if('serviceWorker' in navigator&&import.meta.env.PROD)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
+async function api(url, method = 'GET', body) {
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const d = await r.json();
+  if (!r.ok) {
+    throw new Error(
+      typeof d.detail === 'string'
+        ? d.detail
+        : Array.isArray(d.detail)
+          ? d.detail.map((e) => e.msg).join('; ')
+          : 'Request failed.',
+    );
+  }
+  return d;
+}
+
+function mergePreferences(serverPrefs, week) {
+  const local = loadWeekState(week)?.preferences;
+  return { ...defaultPreferences(), ...serverPrefs, ...local };
+}
+
+function App() {
+  const [week, setWeek] = useState(monday());
+  const [meals, setMeals] = useState(empty);
+  const [revision, setRevision] = useState(0);
+  const [loadedWeek, setLoadedWeek] = useState(monday());
+  const [checked, setChecked] = useState([]);
+  const [shopping, setShopping] = useState(null);
+  const [preferences, setPreferences] = useState(defaultPreferences());
+  const [history, setHistory] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [dirty, setDirty] = useState(false);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState(null);
+  const [intel, setIntel] = useState({});
+  const [liveIntel, setLiveIntel] = useState(null);
+  const [liveDeals, setLiveDeals] = useState({});
+  const [target, setTarget] = useState(0);
+  const [dark, setDark] = useState(() => localStorage.getItem('cv-theme') === 'dark');
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+    localStorage.setItem('cv-theme', dark ? 'dark' : 'light');
+  }, [dark]);
+
+  useEffect(() => {
+    api('/api/meals/history')
+      .then((d) => {
+        setHistory(d.past_meals);
+      })
+      .catch((e) => setError(e.message));
+  }, []);
+
+  async function work(fn) {
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await fn();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function load(value = week) {
+    await work(async () => {
+      const d = await api(`/api/canvas?week_start=${value}`);
+      setWeek(value);
+      setLoadedWeek(value);
+      setMeals(
+        d.meals.length
+          ? days.map((day) => d.meals.find((m) => m.day === day) || { day, dish_name: '', ingredients: [], toddler_tip: '', parser_note: '' })
+          : empty(),
+      );
+      setRevision(d.revision);
+      setChecked(d.checked || []);
+      setShopping(d.shopping);
+      setPreferences(mergePreferences(d.preferences, value));
+      setDirty(false);
+      setIntel({});
+    });
+  }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  function update(i, patch) {
+    setMeals((ms) => ms.map((m, j) => (i === j ? { ...m, ...patch } : m)));
+    setDirty(true);
+    persistWeekState(week, { mealsDraft: true });
+  }
+
+  async function save(nextChecked = checked, nextPreferences = preferences) {
+    await work(async () => {
+      if (week !== loadedWeek) {
+        throw new Error('Load the selected week before saving or changing shopping checks.');
+      }
+      const d = await api('/api/canvas', 'PUT', {
+        week_start: week,
+        revision,
+        meals,
+        checked: nextChecked,
+        preferences: nextPreferences,
+      });
+      setRevision(d.revision);
+      setShopping(d.shopping);
+      setChecked(d.checked);
+      setPreferences(mergePreferences(d.preferences, week));
+      persistWeekState(week, { preferences: d.preferences, checked: d.checked });
+      setDirty(false);
+      setMessage('Four dinners confirmed. Your shopping list is saved.');
+      const h = await api('/api/meals/history');
+      setHistory(h.past_meals);
+    });
+  }
+
+  async function toggle(id) {
+    const next = checked.includes(id) ? checked.filter((k) => k !== id) : [...checked, id];
+    setChecked(next);
+    persistWeekState(week, { checked: next });
+    await save(next);
+  }
+
+  function mealSlotEmpty(meal) {
+    return !meal.dish_name?.trim();
+  }
+
+  function nextEmptyDayIndex(list, afterIndex) {
+    for (let step = 1; step <= list.length; step += 1) {
+      const idx = (afterIndex + step) % list.length;
+      if (mealSlotEmpty(list[idx])) return idx;
+    }
+    return null;
+  }
+
+  async function parse(i, name = meals[i].dish_name, { advanceDay } = {}) {
+    await work(async () => {
+      const d = await api('/api/meals/parse-ingredients', 'POST', { dish_name: name });
+      let nextMeals;
+      setMeals((ms) => {
+        nextMeals = ms.map((m, j) => (i === j ? { ...d, day: m.day } : m));
+        return nextMeals;
+      });
+      if (advanceDay && nextMeals) {
+        const slot = nextEmptyDayIndex(nextMeals, i);
+        if (slot != null) setTarget(slot);
+      }
+      setDirty(true);
+      persistWeekState(week, { mealsDraft: true });
+      setMessage('Suggestions added. Edit ingredients, amounts and toddler notes to fit your meal.');
+    });
+  }
+
+  async function patchPreferences(patch) {
+    const next = { ...preferences, ...patch };
+    if (patch.pack_lunch) next.pack_lunch = patch.pack_lunch;
+    setPreferences(next);
+    persistWeekState(week, { preferences: next });
+    const mealsReady =
+      week === loadedWeek &&
+      !dirty &&
+      meals.every((m) => m.dish_name.trim() && m.ingredients.every((x) => x.name.trim() && Number(x.quantity) > 0));
+    if (mealsReady) {
+      await save(checked, next);
+    }
+  }
+
+  function onPackLunchChange(index, value) {
+    const pack_lunch = [...(preferences.pack_lunch || defaultPreferences().pack_lunch)];
+    pack_lunch[index] = value;
+    patchPreferences({ pack_lunch });
+  }
+
+  const storeMode = !!preferences.store_mode;
+  const canvasHidden = storeMode;
+
+  return (
+    <div className="page">
+      <header>
+        <a href="/" className="brand">
+          <span>
+            <Sprout size={25} />
+          </span>
+          cleanviet
+          <small>the family meal canvas</small>
+        </a>
+        <div className="header-actions">
+          <span className="local">● Your local kitchen</span>
+          <button
+            type="button"
+            className="icon"
+            onClick={() => setDark(!dark)}
+            aria-label={dark ? 'Use light mode' : 'Use dark mode'}
+          >
+            {dark ? <Sun size={19} /> : <Moon size={19} />}
+          </button>
+        </div>
+      </header>
+      <main>
+        <section className="intro">
+          <div className="eyebrow">LESS PLANNING. MORE LIVING.</div>
+          <h1>Four nights. Anything you’re craving.</h1>
+          <p>
+            A Vietnamese soup, a favorite pasta, a quick salmon dinner. Make this week yours.
+          </p>
+          <div className="week-controls">
+            <label>
+              Week of{' '}
+              <input type="date" value={week} onChange={(e) => setWeek(e.target.value)} />
+            </label>
+            <button type="button" onClick={() => load()} disabled={busy}>
+              Load week
+            </button>
+            <span>Friday gathering · Weekends out</span>
+          </div>
+        </section>
+
+        <TodaysModeWidget
+          meals={meals}
+          preferences={preferences}
+          onPreferencesChange={patchPreferences}
+        />
+
+        {error && (
+          <div className="alert error" role="alert">
+            {error}
+            <button type="button" className="icon" aria-label="Dismiss error" onClick={() => setError('')}>
+              <X size={17} />
+            </button>
+          </div>
+        )}
+        {message && (
+          <div className="alert" role="status">
+            <Check size={17} />
+            {message}
+          </div>
+        )}
+
+        <div className="favorite-tools inline-target">
+          <label>
+            Add to{' '}
+            <select value={target} onChange={(e) => setTarget(Number(e.target.value))}>
+              {days.map((day, i) => (
+                <option key={day} value={i}>
+                  {day}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <CookbookBar
+          target={target}
+          days={days}
+          busy={busy}
+          onApplyMeal={(payload) =>
+            work(async () => {
+              let meal = payload;
+              if (payload.parseName) {
+                meal = await api('/api/meals/parse-ingredients', 'POST', {
+                  dish_name: payload.parseName,
+                });
+              }
+              let nextMeals;
+              setMeals((ms) => {
+                nextMeals = ms.map((m, j) =>
+                  target === j ? { ...meal, day: m.day } : m,
+                );
+                return nextMeals;
+              });
+              const slot = nextMeals ? nextEmptyDayIndex(nextMeals, target) : null;
+              if (slot != null) setTarget(slot);
+              setDirty(true);
+              persistWeekState(week, { mealsDraft: true });
+              setMessage('Dish added. Review ingredients before confirming.');
+            })
+          }
+        />
+
+        {!canvasHidden && (
+          <>
+            <div className="canvas-heading">
+              <h2>Your dinner canvas</h2>
+              <span>Family dinner · 2 adults + a little explorer</span>
+            </div>
+            <section className="canvas">
+              {meals.map((meal, i) => (
+                <MealCard
+                  key={meal.day}
+                  meal={meal}
+                  index={i}
+                  busy={busy}
+                  leanMode={preferences.lean_mode}
+                  packLunch={preferences.pack_lunch}
+                  onUpdate={(patch) => update(i, patch)}
+                  onParse={() => parse(i)}
+                  onPackLunchChange={onPackLunchChange}
+                />
+              ))}
+            </section>
+            <datalist id="past-meals">
+              {history.map((h) => (
+                <option key={h} value={h} />
+              ))}
+            </datalist>
+            <div className="confirm-bar">
+              <p>
+                {week !== loadedWeek
+                  ? 'Load the selected week before editing or confirming it.'
+                  : dirty
+                    ? 'You have unsaved changes. Confirm to update the shopping list.'
+                    : 'Choose four dinners, review the suggestions, then confirm.'}
+                <small>
+                  Commute badges are helpful reminders. No meal is blocked by cuisine, timing or
+                  repetition.
+                </small>
+              </p>
+              <button
+                type="button"
+                className="primary"
+                disabled={
+                  busy ||
+                  week !== loadedWeek ||
+                  meals.some(
+                    (m) =>
+                      !m.dish_name.trim() ||
+                      m.ingredients.some((x) => !x.name.trim() || !(Number(x.quantity) > 0)),
+                  )
+                }
+                onClick={() => save()}
+              >
+                {busy ? <LoaderCircle size={17} className="spin" /> : <ShoppingBag size={17} />}{' '}
+                Confirm 4 dishes <ArrowRight size={16} />
+              </button>
+            </div>
+          </>
+        )}
+
+        <ShoppingSection
+          shopping={shopping}
+          dirty={dirty}
+          busy={busy}
+          query={query}
+          setQuery={setQuery}
+          results={results}
+          liveIntel={liveIntel}
+          liveDeals={liveDeals}
+          onSyncFlyers={() =>
+            work(async () => {
+              const d = await api('/api/prices/sync-flyers', 'POST');
+              setLiveDeals(d.deals || {});
+              setMessage('OC flyer prices synced (12h cache).');
+            })
+          }
+          onSearch={() =>
+            work(async () => {
+              const d = await api(`/api/stores/intel?q=${encodeURIComponent(query)}`);
+              setResults(d.matches);
+              setLiveIntel(d.live || null);
+            })
+          }
+          intel={intel}
+          onReview={(id) =>
+            work(async () => {
+              const d = await api(`/api/stores/${id}/community`);
+              setIntel((s) => ({ ...s, [id]: d }));
+            })
+          }
+          onToggleItem={toggle}
+          preferences={preferences}
+          onHomemadeBroth={(value) => patchPreferences({ homemade_broth: value })}
+          storeMode={storeMode}
+        />
+
+        <footer>
+          <Sprout size={16} /> A little structure. Plenty of freedom.
+          <span>CleanViet · Your family, your food.</span>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App />);
+
+const localSplitUi =
+  import.meta.env.DEV || location.port === '4173' || location.port === '5173';
+
+if ('serviceWorker' in navigator) {
+  if (localSplitUi) {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      regs.forEach((r) => r.unregister());
+    });
+  } else if (import.meta.env.PROD) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+}

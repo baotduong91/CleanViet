@@ -1,4 +1,4 @@
-const CACHE = "cleanviet-canvas-v2";
+const CACHE = "cleanviet-canvas-v3";
 self.addEventListener("install", (event) =>
   event.waitUntil(
     caches
@@ -26,7 +26,8 @@ self.addEventListener("fetch", (event) => {
   if (
     event.request.method !== "GET" ||
     url.origin !== self.location.origin ||
-    url.pathname.startsWith("/api/")
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/media/")
   )
     return;
   event.respondWith(

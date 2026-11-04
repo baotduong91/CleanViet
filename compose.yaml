@@ -28,6 +28,8 @@ services:
     build: .
     ports:
       - "127.0.0.1:${CLEANVIET_PORT:-8017}:8000"
+    volumes:
+      - dish_images:/srv/data
     environment:
       DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-cleanviet}:${POSTGRES_PASSWORD:-cleanviet_local_change_me}@db:5432/${POSTGRES_DB:-cleanviet}
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
@@ -41,3 +43,4 @@ services:
       retries: 10
 volumes:
   pgdata:
+  dish_images:

@@ -23,14 +23,29 @@ def test_examples_and_unknown_dishes():
         "Steamed chicken ginger scallion",
     ]:
         assert parse_dish(name).ingredients
-    assert not parse_dish("An entirely unfamiliar family specialty").ingredients
+    assert parse_dish("An entirely unfamiliar family specialty").ingredients
     assert "beef" in {
         i.ingredient_id for i in parse_dish("Pasta bolognese").ingredients
     }
     assert "eggs" not in {
         i.ingredient_id for i in parse_dish("Bún quậy mực trứng").ingredients
     }
-    assert "pin bones" in parse_dish("Salmon").toddler_tip
+    assert "pin bones" in parse_dish("Salmon").toddler_tip.lower()
+    assert "1cm bites" in parse_dish("Súp nui tôm thịt").toddler_tip
+
+
+def test_dry_pasta_merge_and_broth_arbitrage():
+    meals = [
+        parse_dish("Pasta bolognese").model_dump(),
+        parse_dish("Súp nui tôm thịt").model_dump(),
+    ]
+    result = recommend(meals)
+    items = [i for r in result["routes"] for s in r["stores"] for i in s["items"]]
+    pasta = next(i for i in items if i["name"] == "Dry pasta / nui")
+    assert pasta["quantity"] == "1.00"
+    with_broth = recommend(meals, preferences={"homemade_broth": True})
+    assert Decimal(with_broth["homemade_broth_savings"]) > 0
+    assert Decimal(with_broth["estimated_cost"]) < Decimal(result["estimated_cost"])
 
 
 def test_aggregation_covered_unknown_and_units():
@@ -158,6 +173,57 @@ async def test_persist_conflict_history_checks_and_security():
     finally:
         app.dependency_overrides.clear()
         await engine.dispose()
+
+
+def test_cookbook_accent_free_queries():
+    for query in ("canh bau tom", "ga hap la chanh", "bun moc"):
+        meal = parse_dish(query)
+        assert meal.ingredients, f"expected ingredients for {query}"
+        assert meal.toddler_tip
+    assert "1cm" in parse_dish("canh bau tom").toddler_tip or parse_dish(
+        "canh bau tom"
+    ).toddler_tip
+
+
+async def test_live_prices_offline_baseline(monkeypatch):
+    from app.services import live_prices
+
+    async def fail_fetch(*_a, **_k):
+        raise OSError("offline")
+
+    monkeypatch.setattr(live_prices, "_fetch_flipp", fail_fetch)
+    live_prices._memory.clear()
+    result = await live_prices.live_check("shrimp", "92683")
+    assert result["baseline_fallback"]
+    assert result["deals"]
+
+
+def test_recipe_image_picker_prefers_largest_json_ld():
+    from app.services.dish_photos import best_dish_photo_url
+
+    recipe = {
+        "image": [
+            {"@type": "ImageObject", "url": "https://cdn.example/small.jpg", "width": 400},
+            {"@type": "ImageObject", "url": "https://cdn.example/hero.jpg", "width": 1600},
+        ]
+    }
+    url = best_dish_photo_url(recipe, "<html></html>", "https://hungryhuy.com/recipe")
+    assert url == "https://cdn.example/hero.jpg"
+
+
+def test_recipe_image_picker_skips_data_uri_placeholders():
+    from app.services.dish_photos import best_dish_photo_url
+
+    recipe = {"image": "data:image/svg+xml;base64,PHN2Zy8+"}
+    html = '<meta property="og:image" content="https://cdn.example/og.jpg" />'
+    url = best_dish_photo_url(recipe, html, "https://hungryhuy.com/recipe")
+    assert url == "https://cdn.example/og.jpg"
+
+
+def test_cookbook_catalog_size():
+    from app.services.cookbook_catalog import DISHES
+
+    assert len(DISHES) >= 40
 
 
 def test_vercel_settings_normalize_postgres_and_use_exact_hosts():
