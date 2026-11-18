@@ -240,3 +240,48 @@ def test_vercel_settings_normalize_postgres_and_use_exact_hosts():
     assert "cleanviet.example.vercel.app" in settings.trusted_hosts
     assert "attacker.example" not in settings.trusted_hosts
     assert "*" not in settings.trusted_hosts
+
+
+async def test_flyer_snapshot_persists_and_exposes_item_urls(monkeypatch, tmp_path):
+    from app.services import live_prices
+    monkeypatch.setattr(live_prices, "DB_PATH", tmp_path / "prices.sqlite")
+    assert live_prices.flyer_snapshot()["synced_at"] is None
+    deals = {
+        "salmon": {"price": 7.99, "url": "https://example.com/flyer"},
+        "squid": {"price": 8.99, "baseline_fallback": True},
+    }
+    saved = live_prices.save_flyer_snapshot(deals)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
+        result = await client.get("/api/prices/flyer-status")
+    assert result.status_code == 200
+    assert result.json() == saved
+    assert saved["flyer_count"] == saved["baseline_count"] == 1
+    assert saved["deals"]["salmon"]["url"] == "https://example.com/flyer"
+
+
+async def test_review_fallback_has_maps_link(monkeypatch):
+    from app.config import settings
+    monkeypatch.setattr(settings, "google_places_api_key", "")
+    result = await fetch_insights("seafood")
+    assert result["status"] == "not_configured"
+    assert result["url"].startswith("https://www.google.com/maps/search/")
+    assert "Thuan" in result["url"]
+
+
+async def test_sync_snapshot_api_includes_baseline_and_flyer(monkeypatch, tmp_path):
+    from app.services import live_prices
+    monkeypatch.setattr(live_prices, "DB_PATH", tmp_path / "prices.sqlite")
+    async def deals(query, *_args):
+        if "salmon" in query.lower():
+            return [{"price": 7.99, "merchant": "Aldi", "url": "https://example.com/salmon"}]
+        return []
+    monkeypatch.setattr(live_prices, "fetch_live_oc_deals", deals)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://testserver") as client:
+        r = await client.post("/api/prices/sync-flyers")
+        assert r.status_code == 200
+        data = r.json()
+        assert data["synced_at"]
+        assert data["flyer_count"] == 1
+        assert data["baseline_count"] > 0
+        assert data["deals"]["salmon"]["url"] == "https://example.com/salmon"
+        assert (await client.get("/api/prices/flyer-status")).json()["synced_at"] == data["synced_at"]

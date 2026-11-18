@@ -1,4 +1,5 @@
-import { ArrowRight, Search, ShoppingBag } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, Search, ShoppingBag, X, ExternalLink } from 'lucide-react';
 
 const money = (n) =>
   n == null
@@ -9,6 +10,11 @@ function dealForItem(item, liveDeals) {
   if (!item?.id || !liveDeals) return null;
   const key = item.id.split('|')[0];
   return liveDeals[key]?.label || liveDeals[key]?.merchant ? liveDeals[key] : null;
+}
+
+function itemUrl(item, deals) {
+  const url = item.url || dealForItem(item, deals)?.url;
+  return typeof url === 'string' && /^https?:\/\//i.test(url) ? url : null;
 }
 
 export function ShoppingSection({
@@ -28,22 +34,33 @@ export function ShoppingSection({
   onHomemadeBroth,
   storeMode,
   liveDeals,
+  flyerStatus,
+  syncingFlyers,
 }) {
+  const [dismissedSync, setDismissedSync] = useState(null);
+  const statusKey = flyerStatus?.synced_at || (flyerStatus?.unavailable ? 'unavailable' : 'never');
   return (
     <section className={`shopping ${storeMode ? 'shopping-store-mode' : ''}`}>
       <div className="section-heading">
-        <div className="eyebrow">A SMARTER RUN, A LIGHTER BASKET</div>
-        <h2>Where to shop this week</h2>
-        <p>
-          Specialty picks for Little Saigon, bulk staples closer to home, and a cupboard check
-          first.
-        </p>
-        {shopping && (
-          <button type="button" className="sync-flyers" disabled={busy} onClick={onSyncFlyers}>
-            🔄 Sync Live OC Flyer Prices
-          </button>
+        <h2>Shopping list</h2>
+      </div>
+      <div className="flyer-tools">
+        <button type="button" disabled={busy} onClick={onSyncFlyers}>{syncingFlyers ? 'Syncing flyers…' : 'Sync OC flyers'}</button>
+        {dismissedSync === statusKey && (
+          <button type="button" onClick={() => setDismissedSync(null)}>Show sync status</button>
         )}
       </div>
+      {dismissedSync !== statusKey && (
+        <div className="flyer-status" role="status">
+          <div>
+            <strong>OC flyer status</strong>
+            <p>{flyerStatus?.synced_at
+              ? `Last check ${new Date(flyerStatus.synced_at).toLocaleString()} · ${flyerStatus.flyer_count || 0} flyer matches · ${flyerStatus.baseline_count || 0} baseline estimates. Flyer results may be cached up to 12 hours.`
+              : flyerStatus?.unavailable ? 'Sync status unavailable. Try syncing again.' : 'No completed flyer sync recorded.'}</p>
+          </div>
+          <button type="button" className="icon" aria-label="Dismiss flyer status temporarily" onClick={() => setDismissedSync(statusKey)}><X size={16} /></button>
+        </div>
+      )}
       <form
         className="intel-search"
         onSubmit={(e) => {
@@ -57,7 +74,7 @@ export function ShoppingSection({
           value={query}
           maxLength={120}
           required
-          placeholder="Check Item / Supermarket Intel — try Mực trứng or Nấm đùi gà"
+          placeholder="Ingredient in Vietnamese or English, e.g. thịt bò phi lê"
           onChange={(e) => setQuery(e.target.value)}
         />
         <button disabled={busy} type="submit">
@@ -70,18 +87,21 @@ export function ShoppingSection({
             results.map((r) => (
               <div key={r.ingredient.id}>
                 <strong>{r.ingredient.name}</strong>
+                {r.ingredient.name_vi && <span>{r.ingredient.name_vi}</span>}
                 <span>
                   {r.store.name} · {r.store.specialty}
                 </span>
                 <small>
-                  Estimated {money(r.ingredient.local_price)} / {r.ingredient.unit} vs. Weee!{' '}
-                  {money(r.ingredient.weee_price)}. {r.basis}
+                  {r.ingredient.local_price == null
+                    ? 'Price unavailable. '
+                    : `Estimate ${money(r.ingredient.local_price)} / ${r.ingredient.unit} vs. Weee! ${money(r.ingredient.weee_price)}. `}
+                  {r.basis}
                 </small>
-                {liveIntel?.deals?.length > 0 && (
+                {liveIntel?.ingredient_id === r.ingredient.id && liveIntel?.deals?.length > 0 && (
                   <p className="live-deal-badge">
                     {liveIntel.deals[0].baseline_fallback
                       ? `Baseline ${money(liveIntel.deals[0].price)} (offline cache)`
-                      : `🔥 Live Flyer: ${money(liveIntel.deals[0].price)} @ ${liveIntel.deals[0].merchant}`}
+                      : `Flyer: ${money(liveIntel.deals[0].price)} @ ${liveIntel.deals[0].merchant}`}
                   </p>
                 )}
               </div>
@@ -98,26 +118,26 @@ export function ShoppingSection({
         <>
           <div className="budget">
             <div>
-              <span>ESTIMATED REMAINING INGREDIENTS</span>
+              <span>Remaining</span>
               <strong>{money(shopping.estimated_cost)}</strong>
             </div>
             <div>
-              <span>COMPARABLE WEEE! QUANTITIES</span>
+              <span>Weee! estimate</span>
               <strong>{money(shopping.estimated_weee)}</strong>
             </div>
             <div>
-              <span>ESTIMATED DIFFERENCE</span>
+              <span>Difference</span>
               <strong>{money(shopping.estimated_savings)}</strong>
             </div>
           </div>
-          <p className="basis">
+          <details className="basis"><summary>Estimate details{dirty ? ' · Save dishes to refresh' : ''}</summary><p>
             {shopping.basis}{' '}
             {shopping.unpriced_items > 0 &&
               `${shopping.unpriced_items} custom item(s) are unpriced and excluded from totals.`}{' '}
             {dirty && 'The list reflects your last confirmed dishes.'}
-          </p>
+          </p></details>
           <div className="routes">
-            {shopping.routes.map((route, i) => (
+            {shopping.routes.filter((r) => r.stores.length).map((route, i) => (
               <section className="route" key={route.id}>
                 <div className="route-header">
                   <span>0{i + 1}</span>
@@ -134,6 +154,9 @@ export function ShoppingSection({
                         <p className="cooler-tag">{store.cooler_reminder}</p>
                       )}
                       <p>{store.specialty}</p>
+                      {store.query && (
+                        <a className="store-review-link" href={intel[store.id]?.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.query)}`} target="_blank" rel="noreferrer">View store reviews <ExternalLink size={12} /></a>
+                      )}
                       {!storeMode && (
                         <div className="intel-badge">
                           <span className="intel-label">
@@ -148,7 +171,7 @@ export function ShoppingSection({
                           </p>
                           {store.query && (
                             <button type="button" disabled={busy} onClick={() => onReview(store.id)}>
-                              Check recent reviews <ArrowRight size={12} />
+                              Load review summary <ArrowRight size={12} />
                             </button>
                           )}
                           {intel[store.id]?.place_name && (
@@ -183,13 +206,15 @@ export function ShoppingSection({
                                   checked={!!preferences?.homemade_broth}
                                   onChange={(e) => onHomemadeBroth(e.target.checked)}
                                 />
-                                🍲 Make broth from chicken poaching / shrimp shells
+                                Use homemade broth
                                 {shopping.homemade_broth_savings &&
                                   ` (-$${shopping.homemade_broth_savings})`}
                               </label>
                             )}
+                            <div className="shop-item-actions">
                             <button
                               type="button"
+                              aria-pressed={item.checked}
                               className={`shop-item ${item.checked ? 'covered' : ''}`}
                               disabled={busy || dirty}
                               onClick={() => onToggleItem(item.id)}
@@ -203,6 +228,12 @@ export function ShoppingSection({
                               </span>
                               <strong>{money(item.estimated_cost)}</strong>
                             </button>
+                            {itemUrl(item, liveDeals) && (
+                              <a className="item-source" href={itemUrl(item, liveDeals)} target="_blank" rel="noreferrer" aria-label={`View source for ${item.name}`} title="View item or flyer">
+                                <ExternalLink size={15} />
+                              </a>
+                            )}
+                            </div>
                             {dealForItem(item, liveDeals)?.label && (
                               <p className="live-deal-badge">{dealForItem(item, liveDeals).label}</p>
                             )}
@@ -221,8 +252,8 @@ export function ShoppingSection({
       ) : (
         <div className="empty-shopping">
           <ShoppingBag size={30} />
-          <h3>Your next grocery run starts here.</h3>
-          <p>Confirm your four dishes to combine ingredients and find the right specialty stops.</p>
+          <h3>No shopping list yet.</h3>
+          <p>Save dishes to generate a shopping list.</p>
         </div>
       )}
     </section>

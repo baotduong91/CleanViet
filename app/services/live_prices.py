@@ -3,13 +3,16 @@
 from __future__ import annotations
 
 import json
+import asyncio
 import sqlite3
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
 
 from app.services.ingredients import INGREDIENTS, normalize
+from app.services.ingredient_search import search_ingredients, flyer_search_term
 
 FLIPP_URL = "https://backflipp.wishabi.com/flipp/items/search"
 CACHE_TTL = 12 * 3600
@@ -96,6 +99,7 @@ async def _fetch_flipp(query: str, zip_code: str) -> list[dict]:
                 "price": float(price),
                 "valid_to": valid,
                 "zip_code": zip_code,
+                "url": item.get("url") or item.get("item_url") or item.get("flyer_url"),
             }
         )
     return deals
@@ -141,17 +145,19 @@ def _baseline_deal(ingredient_id: str) -> dict | None:
 
 
 async def live_check(query: str, zip_code: str = "92683") -> dict:
-    qn = normalize(query)
-    deals = await fetch_live_oc_deals(query, zip_code)
-    matched_ingredient = None
-    for key, meta in INGREDIENTS.items():
-        if qn in normalize(meta["name"]) or any(qn in a or a in qn for a in meta["aliases"]):
-            matched_ingredient = key
-            break
+    matches = search_ingredients(query, limit=1)
+    ingredient = matches[0] if matches else None
+    matched_ingredient = ingredient["id"] if ingredient else None
+    search_query = flyer_search_term(ingredient) if ingredient else query.strip()
+    try:
+        deals = await asyncio.wait_for(fetch_live_oc_deals(search_query, zip_code), timeout=3)
+    except TimeoutError:
+        deals = []
     if not deals and matched_ingredient:
         fallback = _baseline_deal(matched_ingredient)
         return {
             "query": query,
+            "search_query": search_query,
             "cached": False,
             "baseline_fallback": True,
             "deals": [fallback] if fallback else [],
@@ -159,6 +165,7 @@ async def live_check(query: str, zip_code: str = "92683") -> dict:
         }
     return {
         "query": query,
+        "search_query": search_query,
         "cached": bool(deals),
         "baseline_fallback": not deals,
         "deals": deals[:12],
@@ -167,22 +174,61 @@ async def live_check(query: str, zip_code: str = "92683") -> dict:
 
 
 async def sync_all_staples() -> dict[str, dict]:
-    """Refresh flyer matches for common shopping staples."""
+    """Bound parallel flyer lookups so one sync completes within 25 seconds."""
     out: dict[str, dict] = {}
+    limit = asyncio.Semaphore(4)
+
+    async def lookup(ing_id, meta):
+        async with limit:
+            deals = await fetch_live_oc_deals(meta["name"], "92683")
+        if deals:
+            best = min(deals, key=lambda d: d["price"])
+            valid = best.get("valid_to") or "not provided"
+            out[ing_id] = {
+                **best,
+                "label": f"Flyer: ${best['price']:.2f} @ {best['merchant']} (Valid thru {valid})",
+            }
+
+    try:
+        await asyncio.wait_for(
+            asyncio.gather(*(lookup(k, v) for k, v in INGREDIENTS.items())),
+            timeout=25,
+        )
+    except TimeoutError:
+        pass
     for ing_id, meta in INGREDIENTS.items():
-        deals = await fetch_live_oc_deals(meta["name"], "92683")
-        if not deals:
+        if ing_id not in out:
             fb = _baseline_deal(ing_id)
             if fb:
                 out[ing_id] = {
                     **fb,
-                    "label": f"Baseline ${fb['price']:.2f}/{meta['unit']} (offline cache)",
+                    "label": f"Baseline ${fb['price']:.2f}/{meta['unit']} (no flyer match)",
                 }
-            continue
-        best = min(deals, key=lambda d: d["price"])
-        valid = best.get("valid_to") or "this week"
-        out[ing_id] = {
-            **best,
-            "label": f"🔥 Live Flyer Sale: ${best['price']:.2f} @ {best['merchant']} (Valid thru {valid})",
-        }
     return out
+
+
+def flyer_snapshot() -> dict:
+    """Return the last completed flyer check, including offline results."""
+    conn = _db()
+    row = conn.execute(
+        "SELECT payload FROM flipp_cache WHERE cache_key=?", ("__flyer_snapshot__",)
+    ).fetchone()
+    conn.close()
+    return json.loads(row[0]) if row else {"synced_at": None, "deals": {}}
+
+
+def save_flyer_snapshot(deals: dict) -> dict:
+    snapshot = {
+        "synced_at": datetime.now(timezone.utc).isoformat(),
+        "deals": deals,
+        "flyer_count": sum(not d.get("baseline_fallback", False) for d in deals.values()),
+        "baseline_count": sum(bool(d.get("baseline_fallback")) for d in deals.values()),
+    }
+    conn = _db()
+    conn.execute(
+        "INSERT OR REPLACE INTO flipp_cache(cache_key,fetched_at,payload) VALUES(?,?,?)",
+        ("__flyer_snapshot__", time.time(), json.dumps(snapshot)),
+    )
+    conn.commit()
+    conn.close()
+    return snapshot

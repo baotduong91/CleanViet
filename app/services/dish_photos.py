@@ -8,6 +8,8 @@ from urllib.parse import urljoin, urlparse
 
 import httpx
 
+from app.services.remote_fetch import fetch_public
+
 from app.services.ingredients import normalize
 
 DISH_IMAGE_DIR = Path(__file__).resolve().parents[2] / "data" / "dish_images"
@@ -135,26 +137,23 @@ async def cache_dish_photo(source_url: str, dish_name: str) -> str | None:
     if not source_url or not source_url.startswith("http"):
         return None
     key = normalize(dish_name)[:120].replace(" ", "_") or "dish"
-    dest = local_image_path(key)
-    headers = {"User-Agent": "CleanViet/2.0 dish-photo"}
     try:
-        async with httpx.AsyncClient(timeout=25, follow_redirects=True) as client:
-            resp = await client.get(source_url, headers=headers)
-            resp.raise_for_status()
-            ctype = (resp.headers.get("content-type") or "").split(";")[0].lower()
-            if not ctype.startswith("image/"):
-                return None
-            data = resp.content
-            if len(data) > MAX_BYTES or len(data) < 500:
-                return None
-            ext = ".jpg"
-            if "png" in ctype:
-                ext = ".png"
-            elif "webp" in ctype:
-                ext = ".webp"
-            dest = DISH_IMAGE_DIR / f"{key}{ext}"
-            dest.write_bytes(data)
-            return f"/media/dishes/{key}{ext}"
+        DISH_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+        resp = await fetch_public(source_url, max_bytes=MAX_BYTES)
+        ctype = (resp.headers.get("content-type") or "").split(";")[0].lower()
+        if not ctype.startswith("image/"):
+            return None
+        data = resp.content
+        if len(data) > MAX_BYTES or len(data) < 500:
+            return None
+        ext = ".jpg"
+        if "png" in ctype:
+            ext = ".png"
+        elif "webp" in ctype:
+            ext = ".webp"
+        dest = DISH_IMAGE_DIR / f"{key}{ext}"
+        dest.write_bytes(data)
+        return f"/media/dishes/{key}{ext}"
     except (httpx.HTTPError, OSError, ValueError):
         return None
 

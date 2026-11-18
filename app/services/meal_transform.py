@@ -29,7 +29,7 @@ PROTEIN_IDS = {
 }
 CARB_IDS = {"rice", "nui", "pasta", "bun"}
 LEAN_CARB_IDS = {"rice", "nui", "pasta", "bun"}
-LEAN_VOLUME_IDS = {"king_oyster", "broccoli", "greens"}
+LEAN_VOLUME_IDS = {"king_oyster", "broccoli", "greens", "carrot", "napa", "lotus_root", "pumpkin", "bottle_gourd", "shiitake", "taro_stem"}
 
 
 def _ingredient_id(item) -> str | None:

@@ -5,3 +5,116 @@
 .today-widget{border:1px solid var(--line);border-radius:12px;background:var(--paper);margin-bottom:28px;overflow:hidden}.today-widget-handoff{border-color:#9cb87d;box-shadow:0 0 0 1px #9cb87d33}.today-widget-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;border:0;background:var(--sage);text-align:left}.today-widget-toggle strong{display:block;font-size:15px;margin-top:4px}.today-badge{display:block;font-size:11px;color:var(--green);margin-top:8px;line-height:1.5}.today-widget-body{padding:16px 18px 18px;border-top:1px solid var(--line)}.today-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}.today-actions button{font-size:11px;padding:10px 12px;background:var(--paper)}.today-actions .toggle-on{background:var(--green);color:#fffef5;border-color:var(--green)}.chev-open{transform:rotate(180deg)}.handoff-card{background:var(--tint);border:1px solid var(--line);border-radius:10px;padding:16px}.handoff-card h3{font-size:14px;font-weight:600}.handoff-dish{font-size:17px;font-family:Georgia,serif;margin:8px 0 12px}.handoff-card ol{margin:0;padding-left:18px;font-size:12px;line-height:1.8;color:var(--muted)}.handoff-toddler{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.handoff-toddler span{font-size:8px;letter-spacing:1px;color:var(--muted)}.handoff-toddler p{font-size:12px;line-height:1.7;margin-top:6px}.macro-pill{font-size:10px;color:var(--green);margin:6px 0 10px}.lean-badge{font-size:9px;line-height:1.6;color:var(--muted);background:var(--sage);padding:8px;border-radius:6px;margin-bottom:10px}.pack-lunch{display:flex;align-items:center;gap:8px;font-size:11px;margin:0 0 16px;color:var(--muted)}.pack-lunch input{width:16px;height:16px;accent-color:#6b8c50}.shopping-store-mode{margin-top:0;padding:22px;background:var(--paper);border:2px solid var(--green);border-radius:14px}.shopping-store-mode .shop-item{font-size:14px;min-height:48px;padding:14px 0}.shopping-store-mode .shop-item strong{font-size:13px;color:var(--ink)}.cooler-tag{font-size:11px;font-weight:600;color:var(--green);margin:8px 0 4px}.broth-toggle{display:flex;align-items:flex-start;gap:8px;font-size:11px;line-height:1.6;color:var(--muted);margin:10px 0 4px;padding:10px;background:var(--sage);border-radius:8px}.broth-toggle input{margin-top:3px;accent-color:#6b8c50}.shop-item{width:100%;border:0;background:transparent;text-align:left;padding:13px 0;border-bottom:1px solid var(--line);font-size:11px;cursor:pointer;display:flex;gap:10px;align-items:center;min-height:48px}.shop-check{width:16px;height:16px;border:2px solid var(--line);border-radius:4px;flex-shrink:0;transition:background .15s,border-color .15s}.shop-check-on{background:var(--green);border-color:var(--green);box-shadow:inset 0 0 0 2px var(--paper)}.shop-item.covered>span:nth-child(2){text-decoration:line-through;opacity:.6}.shop-item:disabled{cursor:not-allowed}
 .cookbook-compact{margin-bottom:20px;padding:16px 18px}.cookbook-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;margin-bottom:10px}.cookbook-head span{font-size:11px;color:var(--muted)}.cookbook-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.cookbook-tabs button{font-size:10px;padding:6px 9px;background:var(--paper)}.cookbook-tabs .tab-on{background:var(--green);color:#fffef5;border-color:var(--green)}.cookbook-unified{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:6px 10px;background:var(--paper);border:1px solid var(--line);border-radius:10px}.cookbook-unified input{flex:1;border:0;background:transparent;padding:8px 4px;min-width:0}.cookbook-unified .import-cta{background:var(--green);color:#fffef5;border-color:var(--green);white-space:nowrap}.cookbook-hint{font-size:10px;color:var(--muted);white-space:nowrap}.cookbook-import-error{font-size:11px;color:#8b2e2e;background:#f5e0d9;border-radius:8px;padding:8px 12px;margin:0 0 10px;line-height:1.5}.import-preview{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px}.import-preview header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.import-preview h3{font-size:14px;margin:0;font-family:Georgia,serif}.import-preview p{font-size:11px;color:var(--muted);line-height:1.6;margin:8px 0}.import-preview ul{margin:0 0 10px;padding-left:18px;font-size:11px;line-height:1.7;color:var(--ink)}.preview-actions{display:flex;flex-wrap:wrap;gap:8px}.preview-actions .compact{font-size:11px;padding:8px 12px}.cookbook-chips .chip-wrap{display:inline-flex;align-items:stretch;margin:0 6px 6px 0}.cookbook-chips .chip-wrap button:first-child{border-radius:8px 0 0 8px}.chip-remove{border-radius:0 8px 8px 0;padding:8px 10px;border-left:0;background:var(--sage);min-width:36px}.chip-remove:hover:not(:disabled){background:#e8d4d4;color:#8b2e2e}.dish-thumb{width:28px;height:28px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--sage)}.dish-thumb-preview{width:52px;height:52px;border-radius:8px}.dish-thumb-fallback{display:inline-flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--line)}.cookbook-chips button:first-child{display:inline-flex;align-items:center;gap:6px}.import-preview .preview-head{display:flex;align-items:center;gap:10px}.import-preview .preview-head h3{flex:1;margin:0}.inline-target{margin-bottom:8px;font-size:12px}.sync-flyers{margin-top:12px;font-size:11px;background:var(--sage)}.live-deal-badge{font-size:10px;line-height:1.5;color:var(--green);margin:4px 0 8px 32px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* Compact planner and in-store controls. */
+:root{--sage:#f0f2f1;--tint:#f3f4f3;--bg:#f7f8f8;--paper:#fff}
+.page main{max-width:1320px;padding-top:16px}
+.page>header{padding-top:14px;padding-bottom:14px}
+h1{font-family:inherit;font-weight:600;font-size:22px;line-height:1.3;letter-spacing:0;margin:0}
+.intro{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.week-controls{margin:0}
+.today-widget{margin-bottom:12px}
+.today-widget-toggle{padding:9px 12px}
+.today-widget-toggle .eyebrow{display:none}
+.today-widget-toggle strong{font-size:13px;margin:0}
+.today-widget-body{padding:10px 12px}
+.today-actions{margin-bottom:0}
+.handoff-card{margin-top:10px;padding:10px}
+.alert{margin:10px 0;padding:9px 12px}
+.alert>.icon{margin-left:auto}
+.favorite-strip{background:var(--paper);padding:12px;margin-bottom:12px}
+.cookbook-tabs{margin-bottom:8px}
+.cookbook-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:48px;gap:6px;height:156px;min-height:48px;max-height:156px;overflow-y:scroll;resize:vertical;scrollbar-gutter:stable;padding-bottom:2px}
+.cookbook-chips .chip-wrap{margin:0;min-width:0;overflow:hidden}
+.cookbook-chips .chip-wrap>button:first-child{flex:1;min-width:0;justify-content:flex-start;text-align:left;overflow:hidden;font-size:12px;padding:6px}
+.cookbook-hint{display:none}
+.canvas-heading{margin-bottom:8px}
+.canvas-heading h2{font-family:inherit;font-weight:600;font-size:16px;line-height:1.4;margin:0}
+.canvas{gap:10px}
+.meal{padding:12px}
+.day-title h2{font-size:16px;margin:0}
+.day-badge{margin:6px 0 10px;padding:4px;background:transparent}
+.pack-lunch{margin-bottom:10px}
+.meal>textarea{height:58px;font-size:13px}
+.parse-button{margin-bottom:12px}
+.ingredient-list{gap:4px;margin-top:8px}
+.ingredient-row{padding:2px;background:var(--bg);gap:2px;flex-wrap:wrap}
+.ingredient-row input:first-child{min-width:90px}
+.ingredient-row .icon{width:24px;height:28px}
+.ingredient-row .ingredient-save{color:var(--green)}
+.parser-note{min-height:0;line-height:1.5;margin:6px 0}
+.toddler{margin-top:8px;padding-top:8px}
+.toddler textarea{min-height:65px;background:var(--bg)}
+.confirm-bar{position:sticky;bottom:10px;z-index:10;justify-content:center;flex-direction:row;flex-wrap:wrap;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin:12px auto;max-width:460px;box-shadow:0 2px 8px #00000012}
+.confirm-bar p{margin:0;font-size:12px}
+.confirm-bar .primary{min-height:40px;padding:8px 18px}
+.shopping{margin-top:18px}
+.shopping-store-mode{padding:12px;border-width:1px}
+.section-heading h2{font-family:inherit;font-weight:600;font-size:20px;line-height:1.4;letter-spacing:0;margin:0}
+.intel-search{margin:10px 0;padding:5px 10px}
+.budget{margin-top:10px;gap:8px}
+.budget>div{padding:10px 12px;background:var(--paper);border:1px solid var(--line)}
+.budget span{min-height:0;font-size:10px;letter-spacing:0}
+.budget strong{font-size:22px;margin-top:4px}
+.basis{margin:10px 0;font-size:11px}
+.basis summary{cursor:pointer}
+.routes{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:10px}
+.route-header{padding:10px}
+.route-header h3{font-size:13px}
+.route-header p{line-height:1.4}
+.store{padding:12px}
+.store h4{font-size:14px}
+.store>p{font-size:11px;line-height:1.4}
+.intel-badge{margin:8px 0;padding:8px}
+.shop-item-actions{display:flex;align-items:center;gap:4px}
+.shop-item-actions .shop-item{flex:1;min-width:0;min-height:48px;padding:8px 0}
+.shop-item>span:nth-child(2){min-width:0;overflow-wrap:anywhere;text-align:left}
+.shop-item>.shop-check{flex:0 0 16px}
+.item-source{display:flex;align-items:center;justify-content:center;min-width:36px;min-height:48px;color:var(--green)}
+.flyer-tools{display:flex;gap:8px;margin-top:12px}
+.flyer-status{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;padding:10px;margin:8px 0 16px;font-size:12px;background:var(--paper)}
+.flyer-status>div{flex:1}
+.flyer-status p{font-size:11px;color:var(--muted);line-height:1.5;margin:4px 0 0}
+.empty-shopping{padding:20px;gap:8px}
+.empty-shopping h3{font-family:inherit;font-weight:600;font-size:15px}
+@media(max-width:700px){.cookbook-chips{grid-template-columns:repeat(2,minmax(0,1fr))}.page main{padding:12px}.intro h1{font-size:20px}.confirm-bar{bottom:6px}.meal{padding:12px}.ingredient-row input,.ingredient-row select{font-size:12px}.canvas-heading{display:flex}.canvas-heading>span{margin:0}.shopping-store-mode .shop-item{padding:8px 0}}
+@media(max-width:400px){.cookbook-chips{grid-template-columns:1fr}}
+.ingredient-save-confirm{flex:1 0 100%;padding:8px;border:1px solid var(--line);border-radius:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;background:var(--paper)}
+.ingredient-save-confirm>span{width:100%}
+.ingredient-save-confirm button{padding:6px 10px}
+
+/* Keep the sync action inside the scrolling store list. */
+.shopping-store-mode{max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.flyer-tools{padding:8px 0;margin:0;align-items:center;background:var(--paper)}
+.shopping-store-mode .flyer-tools{position:sticky;top:-12px;z-index:5;border-bottom:1px solid var(--line);padding:10px 0}
+.store-review-link{display:inline-flex;gap:5px;align-items:center;font-size:12px;color:var(--green);padding:8px 0;text-decoration:underline;text-underline-offset:3px}
+.cookbook-chips{grid-auto-rows:88px;height:276px;max-height:276px;gap:6px}
+.cookbook-chips .chip-wrap{height:88px}
+.cookbook-chips .chip-wrap>button:first-child{align-items:center;padding:8px;overflow:visible;white-space:normal}
+.dish-chip-name{display:block;min-width:0;line-height:1.35;font-size:12px;overflow-wrap:anywhere;text-wrap:pretty}
+.dish-chip-name-long{font-size:11px;line-height:1.25}
+.cookbook-chips .dish-thumb{width:24px;height:24px}
+.cookbook-chips .chip-wrap>button:first-child>svg{flex-shrink:0;width:12px}
+@media(max-width:700px){.cookbook-chips{grid-template-columns:1fr}.dish-chip-name{font-size:13px}.dish-chip-name-long{font-size:11px}}
+
+.recipe-autocomplete{position:relative;flex:1;min-width:0}
+.recipe-autocomplete>input{width:100%}
+.recipe-autocomplete-card>textarea{display:block;width:100%;height:68px;resize:vertical;font-size:13px;line-height:1.5;background:var(--bg)}
+.recipe-suggestions{position:absolute;top:100%;left:0;right:0;z-index:30;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 20px #0002;max-height:320px;overflow-y:auto;overscroll-behavior:contain}
+.recipe-suggestions>button{width:100%;display:flex;align-items:center;text-align:left;gap:8px;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px;min-height:48px}
+.suggestion-title{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.4;font-size:12px}
+.suggestion-title strong{font-weight:750}
+.suggestion-title small{display:block;color:var(--muted);font-size:10px}
+.suggestion-source{font-size:10px;color:var(--muted);flex:0 0 auto;max-width:80px}
+.suggestion-active{background:var(--sage)}
+.suggestion-loading{padding:8px 12px;font-size:11px;color:var(--muted)}
+@media(max-width:600px){.recipe-autocomplete-card>textarea{font-size:16px}.recipe-suggestions{max-height:280px}.suggestion-title{font-size:13px}}
+
+.cookbook-chips:empty{display:none}
+
+.search-scope{font-size:12px;color:var(--muted);margin:8px 0}
+.preview-ingredients{max-height:260px;overflow-y:auto;overscroll-behavior:contain;margin:10px 0;border-top:1px solid var(--line)}
+.preview-ingredient{display:grid;grid-template-columns:minmax(0,1fr) 90px 65px;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:6px 0;font-size:12px}
+.preview-ingredient>span{overflow-wrap:anywhere}
+.preview-ingredient input,.preview-ingredient select{width:100%;padding:6px}
+@media(max-width:600px){.preview-ingredient{grid-template-columns:minmax(0,1fr) 72px 58px;gap:5px}.preview-actions button{min-height:44px}}

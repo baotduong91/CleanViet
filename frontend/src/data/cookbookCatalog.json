@@ -1,0 +1,303 @@
+[
+  {
+    "catalog_id": "canh_bau_tom",
+    "title_clean": "Canh bầu tôm tươi",
+    "search_text": "canh bau tom tuoi fresh shrimp   bottle gourd soup canh bau tom canh bau tom",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_cai_be",
+    "title_clean": "Canh cải bẹ xanh thịt bằm",
+    "search_text": "canh cai be xanh thit bam napa cabbage   ground pork soup canh cai be canh cai be cai be xanh",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_mong_toi_tom",
+    "title_clean": "Canh mồng tơi nấu tôm",
+    "search_text": "canh mong toi nau tom malabar spinach   shrimp soup canh mong toi tom mong toi canh mong toi",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_chua_ca",
+    "title_clean": "Canh chua cá bông lau",
+    "search_text": "canh chua ca bong lau tamarind sour catfish soup canh chua ca canh chua ca bong lau",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_tan_o_thac_lac",
+    "title_clean": "Canh tần ô cá thác lác",
+    "search_text": "canh tan o ca thac lac taro stem   featherback fish soup canh tan o thac lac tan o thac lac",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_suon_sen",
+    "title_clean": "Canh sườn non củ sen",
+    "search_text": "canh suon non cu sen young ribs   lotus root soup canh suon sen suon non cu sen",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_rong_bien_dau_hu",
+    "title_clean": "Canh rong biển đậu hũ thịt bằm",
+    "search_text": "canh rong bien dau hu thit bam seaweed tofu pork soup canh rong bien dau hu rong bien dau hu",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_bi_do",
+    "title_clean": "Canh bí đỏ thịt bằm",
+    "search_text": "canh bi do thit bam pumpkin ground pork soup canh bi do bi do canh bi",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_khoai_mon",
+    "title_clean": "Canh khoai môn thịt bằm",
+    "search_text": "canh khoai mon thit bam taro   pork soup canh khoai mon khoai mon",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_chua_tom",
+    "title_clean": "Canh chua tôm",
+    "search_text": "canh chua tom sour shrimp soup canh chua tom canh chua tom",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "sup_nui_tom_nam",
+    "title_clean": "Súp nui tôm thịt nấm đùi gà",
+    "search_text": "sup nui tom thit nam dui ga macaroni soup shrimp pork king oyster sup nui tom nam sup nui sup nui",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "bun_quay_pq",
+    "title_clean": "Bún quậy Phú Quốc",
+    "search_text": "bun quay phu quoc phu quoc dipping noodle bowl bun quay pq bun quay",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "bun_moc",
+    "title_clean": "Bún mọc nấm hương",
+    "search_text": "bun moc nam huong vietnamese meatball   shiitake noodle soup bun moc bun moc",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "mien_ga",
+    "title_clean": "Miến gà xé phay",
+    "search_text": "mien ga xe phay glass noodle chicken soup mien ga mien ga mien ga",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "chao_ga",
+    "title_clean": "Cháo gà ác hạt sen",
+    "search_text": "chao ga ac hat sen free range chicken lotus seed congee chao ga chao ga chao",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "bun_bo_hue_nhe",
+    "title_clean": "Bún bò Huế nhẹ",
+    "search_text": "bun bo hue nhe light central style beef noodle soup bun bo hue nhe bun bo",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "hu_tieu",
+    "title_clean": "Hủ tiếu Nam Vang",
+    "search_text": "hu tieu nam vang nam vang pork seafood noodle soup hu tieu hu tieu",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "mi_quang",
+    "title_clean": "Mì Quảng gà",
+    "search_text": "mi quang ga quang style turmeric chicken noodles mi quang mi quang",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "bun_thit_nuong",
+    "title_clean": "Bún thịt nướng",
+    "search_text": "bun thit nuong grilled pork vermicelli bowl bun thit nuong bun thit nuong",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "pho_ga_nhe",
+    "title_clean": "Phở gà nhẹ",
+    "search_text": "pho ga nhe light chicken pho pho ga nhe pho ga",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ga_hap_hanh_gung",
+    "title_clean": "Gà hấp hành gừng",
+    "search_text": "ga hap hanh gung steamed ginger scallion chicken ga hap hanh gung ga hap ga hap",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ga_hap_la_chanh",
+    "title_clean": "Gà hấp lá chanh nấm đùi gà",
+    "search_text": "ga hap la chanh nam dui ga kaffir lime leaf king oyster steamed chicken ga hap la chanh ga hap la chanh",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ca_ro_phi_sa",
+    "title_clean": "Cá rô phi nướng sả nghệ (Air Fryer)",
+    "search_text": "ca ro phi nuong sa nghe  air fryer  air fry lemongrass turmeric tilapia ca ro phi sa ca ro phi tilapia",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ca_hoi_airfry",
+    "title_clean": "Cá hồi nướng miso tỏi ớt (Air Fryer)",
+    "search_text": "ca hoi nuong miso toi ot  air fryer  air fry miso garlic salmon ca hoi airfry ca hoi salmon air",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "muc_hap",
+    "title_clean": "Mực ống trứng hấp gừng hành",
+    "search_text": "muc ong trung hap gung hanh steamed roe squid ginger scallion muc hap muc hap muc ong trung",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ca_hap_tuong",
+    "title_clean": "Cá điêu hồng chưng tương",
+    "search_text": "ca dieu hong chung tuong steamed red snapper black bean ca hap tuong ca dieu hong chung tuong",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "tom_hap",
+    "title_clean": "Tôm hấp bia",
+    "search_text": "tom hap bia beer steamed shrimp tom hap tom hap",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ca_hap_xi_dau",
+    "title_clean": "Cá hấp xì dầu",
+    "search_text": "ca hap xi dau steamed fish soy ginger ca hap xi dau ca hap",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "bo_luc_lac",
+    "title_clean": "Bò lúc lắc khoai tây air-fry",
+    "search_text": "bo luc lac khoai tay air fry shaking beef   air fry potatoes bo luc lac bo luc lac",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "bo_xao_broccoli",
+    "title_clean": "Thịt bò xào bông cải xanh",
+    "search_text": "thit bo xao bong cai xanh beef broccoli stir fry bo xao broccoli bo xao bong cai",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "muc_xao_toi",
+    "title_clean": "Mực xào cần tỏi",
+    "search_text": "muc xao can toi garlic celery squid stir fry muc xao toi muc xao",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "dau_hu_nhoi_thit",
+    "title_clean": "Đậu hũ nhồi thịt sốt cà chua",
+    "search_text": "dau hu nhoi thit sot ca chua stuffed tofu tomato sauce dau hu nhoi thit dau hu nhoi",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "tom_rim_thit",
+    "title_clean": "Tôm rim thịt nạc",
+    "search_text": "tom rim thit nac caramel shrimp lean pork tom rim thit tom rim",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "thit_kho_trung",
+    "title_clean": "Thịt kho trứng",
+    "search_text": "thit kho trung caramel pork   eggs thit kho trung thit kho",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "ca_kho_to",
+    "title_clean": "Cá kho tộ",
+    "search_text": "ca kho to clay pot braised catfish ca kho to ca kho",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "rau_muong_xao",
+    "title_clean": "Rau muống xào tỏi",
+    "search_text": "rau muong xao toi garlic water spinach rau muong xao rau muong",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "canh_ga_sam",
+    "title_clean": "Gà xào sả ớt",
+    "search_text": "ga xao sa ot lemongrass chili chicken stir fry canh ga sam ga xao",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "pasta_bolognese",
+    "title_clean": "Pasta bolognese",
+    "search_text": "pasta bolognese family pasta bolognese pasta bolognese bolognese pasta",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "toddler_tomato_pasta",
+    "title_clean": "Toddler tomato pasta",
+    "search_text": "toddler tomato pasta mild tomato pasta toddler tomato pasta",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "salmon_broccoli_rice",
+    "title_clean": "Air fry salmon with broccoli & rice",
+    "search_text": "air fry salmon with broccoli   rice salmon broccoli rice bowl salmon broccoli rice air fry salmon",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "steamed_chicken_ginger",
+    "title_clean": "Steamed chicken ginger scallion",
+    "search_text": "steamed chicken ginger scallion steamed chicken ginger scallion steamed chicken ginger steamed chicken",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "turkey_meatballs",
+    "title_clean": "Turkey veggie meatballs",
+    "search_text": "turkey veggie meatballs turkey veggie meatballs turkey meatballs meatball",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  },
+  {
+    "catalog_id": "sheet_pan_chicken",
+    "title_clean": "Sheet-pan lemon herb chicken",
+    "search_text": "sheet pan lemon herb chicken sheet pan lemon herb chicken sheet pan chicken sheet pan",
+    "source_domain": "CleanViet Catalog",
+    "source_url": null
+  }
+]

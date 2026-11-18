@@ -20,7 +20,7 @@ const PROTEIN_IDS = new Set([
 ]);
 const CARB_IDS = new Set(['rice', 'nui', 'pasta', 'bun']);
 const LEAN_CARB_IDS = new Set(['rice', 'nui', 'pasta', 'bun']);
-const LEAN_VOLUME_IDS = new Set(['king_oyster', 'broccoli', 'greens']);
+const LEAN_VOLUME_IDS = new Set(['king_oyster', 'broccoli', 'greens', 'carrot', 'napa', 'lotus_root', 'pumpkin', 'bottle_gourd', 'shiitake', 'taro_stem']);
 
 export function normalizeDish(name) {
   return (name || '')
@@ -79,6 +79,7 @@ export function estimateMacros(ingredients, { leanMode, packLunch } = {}) {
   for (const item of ingredients || []) {
     let qty = Number(item.quantity) || 0;
     const id = item.ingredient_id;
+    if (packLunch && (PROTEIN_IDS.has(id) || CARB_IDS.has(id))) qty *= 1.5;
     if (leanMode && LEAN_CARB_IDS.has(id)) qty *= 0.75;
     if (leanMode && LEAN_VOLUME_IDS.has(id)) qty *= 1.3;
     if (PROTEIN_IDS.has(id)) {
@@ -96,10 +97,10 @@ export function estimateMacros(ingredients, { leanMode, packLunch } = {}) {
     kcal = DEFAULT_KCAL * divisor;
     protein = DEFAULT_PROTEIN * divisor;
   }
-  kcal = Math.round(kcal / divisor);
-  protein = Math.round(protein / divisor);
+  kcal /= divisor;
+  protein /= divisor;
   const tier = kcal > 750 ? 'Hearty' : kcal >= 550 ? 'Balanced' : 'Lean';
-  return { kcal, protein, tier };
+  return { kcal: Math.round(kcal), protein: Math.round(protein), tier };
 }
 
 export function officeLunchSavings(packLunch) {

@@ -1,6 +1,9 @@
 import { ArrowRight, ImageOff, Plus, Search, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { RecipeSearchAutocomplete } from './RecipeSearchAutocomplete.jsx';
+import { resolveDishIcon } from '../utils/iconParser.js';
+
 const TAB_DEFAULT = 'favorites';
 const URL_RE = /^https?:\/\//i;
 
@@ -33,9 +36,10 @@ function DishThumb({ src, alt, size = 'chip' }) {
   );
 }
 
-async function fetchJson(url, method = 'GET', body) {
+async function fetchJson(url, method = 'GET', body, signal) {
   const r = await fetch(url, {
     method,
+    signal,
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -64,40 +68,91 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
   const [importBusy, setImportBusy] = useState(false);
   const [importError, setImportError] = useState('');
   const lastAutoImport = useRef('');
+  const previewRequest = useRef(null);
+  const previewPanel = useRef(null);
+  const previewVersion = useRef(0);
+  const [searchResults, setSearchResults] = useState([]);
+  const [savingPreview, setSavingPreview] = useState(false);
+  useEffect(() => () => previewRequest.current?.abort(), []);
 
   const isUrl = URL_RE.test(query.trim());
+  const searching = !!query.trim() && !isUrl;
+  const visibleDishes = searching
+    ? searchResults.map((row) => ({
+        ...row, id: row.source_url || row.catalog_id || row.title_clean,
+        display_name: row.title_clean, name_en: row.title_clean,
+      }))
+    : dishes;
+  useEffect(() => {
+    previewPanel.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [preview?.dish_name, importBusy]);
+
+  const validPreview = preview?.ingredients.length > 0 &&
+    preview.ingredients.every((item) => item.name.trim() && Number(item.quantity) > 0);
 
   const loadDishes = useCallback(async () => {
-    const q = query.trim();
-    const path =
-      isUrl && tab === TAB_DEFAULT
-        ? `/api/cookbook?category=${encodeURIComponent(tab)}`
-        : q && !isUrl
-          ? `/api/cookbook?category=${encodeURIComponent(tab)}&q=${encodeURIComponent(q)}`
-          : `/api/cookbook?category=${encodeURIComponent(tab)}`;
+    const path = `/api/cookbook?category=${encodeURIComponent(tab)}`;
     const d = await fetchJson(path);
     setCategories(d.categories || []);
     setDishes(d.dishes || []);
-  }, [tab, query, isUrl]);
+  }, [tab]);
 
   useEffect(() => {
     loadDishes().catch(() => {});
   }, [loadDishes]);
 
+  function clearPreview() {
+    previewVersion.current += 1;
+    previewRequest.current?.abort();
+    setPreview(null);
+    setImportBusy(false);
+    setImportError('');
+  }
+
+  async function preparePreview(row) {
+    clearPreview();
+    const version = previewVersion.current;
+    const controller = new AbortController();
+    previewRequest.current = controller;
+    const title = `${row.icon || resolveDishIcon(row.title_clean).icon} ${row.title_clean}`.slice(0, 200);
+    setPreview({ dish_name: title, ingredients: [], toddler_tip: '', parser_note: 'Loading ingredients…' });
+    setImportBusy(true);
+    try {
+      const meal = await fetchJson('/api/cookbook/select-suggestion', 'POST', {
+        title_clean: row.title_clean, source_url: row.source_url || null,
+        catalog_id: row.catalog_id || null,
+      }, controller.signal);
+      if (previewVersion.current === version) setPreview(meal);
+    } catch (error) {
+      if (!controller.signal.aborted && previewVersion.current === version) {
+        setImportError(error.message || 'Could not load ingredients. Select the recipe to retry.');
+      }
+    } finally {
+      if (previewVersion.current === version) setImportBusy(false);
+    }
+  }
+
   const runImport = useCallback(async () => {
     const url = query.trim();
     if (!URL_RE.test(url)) return;
+    previewVersion.current += 1;
+    const version = previewVersion.current;
+    previewRequest.current?.abort();
+    const controller = new AbortController();
+    previewRequest.current = controller;
     setImportBusy(true);
     setImportError('');
     try {
-      const meal = await fetchJson('/api/cookbook/import-url', 'POST', { url });
+      const meal = await fetchJson('/api/cookbook/import-url', 'POST', { url }, controller.signal);
+      if (version !== previewVersion.current) return;
       setPreview(meal);
       lastAutoImport.current = url;
     } catch (err) {
-      setImportError(err?.message || 'Import failed.');
-      setPreview(null);
+      if (!controller.signal.aborted && version === previewVersion.current) {
+        setImportError(err?.message || 'Import failed.');
+      }
     } finally {
-      setImportBusy(false);
+      if (version === previewVersion.current) setImportBusy(false);
     }
   }, [query]);
 
@@ -115,13 +170,22 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
   }, [query, runImport]);
 
   async function persistPreview(andApply) {
-    if (!preview) return;
-    await fetchJson('/api/cookbook/saved', 'POST', preview);
-    await loadDishes();
-    if (andApply) {
-      onApplyMeal(preview);
-      setPreview(null);
-      setQuery('');
+    if (!preview || !validPreview || importBusy || savingPreview) return;
+    setSavingPreview(true);
+    setImportError('');
+    try {
+      if (andApply) {
+        await onApplyMeal(preview);
+        clearPreview();
+        setQuery('');
+      } else {
+        await fetchJson('/api/cookbook/saved', 'POST', preview);
+        await loadDishes();
+      }
+    } catch (error) {
+      setImportError(error.message || 'Could not save dish. Try again.');
+    } finally {
+      setSavingPreview(false);
     }
   }
 
@@ -136,16 +200,27 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
 
   function pickDish(d) {
     if (d.payload) {
-      onApplyMeal(d.payload);
+      clearPreview();
+      setPreview(d.payload);
       return;
     }
-    onApplyMeal({ dish_name: d.display_name, parseName: d.display_name });
+    preparePreview({
+      title_clean: d.display_name, icon: d.icon,
+      source_url: d.source_url, catalog_id: d.source_url ? null : (d.catalog_id || d.id),
+    });
+  }
+
+  function updateIngredient(index, patch) {
+    setPreview((meal) => ({
+      ...meal,
+      ingredients: meal.ingredients.map((item, i) => i === index ? { ...item, ...patch } : item),
+    }));
   }
 
   return (
     <section className="favorite-strip cookbook-bar cookbook-compact">
       <div className="cookbook-head">
-        <strong>Vietnamese cookbook</strong>
+        <strong>Recipes</strong>
         <span>Add to {days[target]}</span>
       </div>
       <div className="cookbook-tabs" role="tablist">
@@ -163,31 +238,30 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
             key={c.id}
             type="button"
             role="tab"
-            aria-selected={tab === c.id}
-            className={tab === c.id ? 'tab-on' : ''}
+            aria-selected={!searching && tab === c.id}
+            className={!searching && tab === c.id ? 'tab-on' : ''}
             onClick={() => {
               setTab(c.id);
-              setPreview(null);
+              setQuery('');
+              clearPreview();
             }}
           >
-            {c.label}
+            {c.label.replace(/^[^\p{L}]+/u, '')}
           </button>
         ))}
       </div>
       <div className="cookbook-unified">
         <Search size={17} aria-hidden />
-        <input
+        <RecipeSearchAutocomplete
           value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            if (!URL_RE.test(e.target.value.trim())) {
-              setPreview(null);
-              setImportError('');
-              lastAutoImport.current = '';
-            }
+          onChange={(text) => {
+            setQuery(text);
+            clearPreview();
+            lastAutoImport.current = '';
           }}
-          placeholder="Search dishes or paste a recipe URL…"
-          aria-label="Search dishes or paste recipe URL"
+          onSelect={preparePreview}
+          onResultsChange={setSearchResults}
+          disabled={busy}
         />
         {isUrl ? (
           <button
@@ -199,16 +273,17 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
             {importBusy ? 'Importing…' : 'Import'}
           </button>
         ) : (
-          <span className="cookbook-hint">40+ weeknight dishes</span>
+          <span className="cookbook-hint"></span>
         )}
       </div>
+      {searching && <p className="search-scope">Search results · All recipes</p>}
       {importError && (
         <p className="cookbook-import-error" role="alert">
           {importError}
         </p>
       )}
       {preview && (
-        <article className="import-preview">
+        <article ref={previewPanel} className="import-preview" aria-label="Ingredient preview" aria-busy={importBusy}>
           <header className="preview-head">
             <DishThumb src={preview.image_url} alt={preview.dish_name} size="preview" />
             <h3>{preview.dish_name}</h3>
@@ -217,7 +292,7 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
               className="icon preview-close"
               aria-label="Dismiss preview"
               onClick={() => {
-                setPreview(null);
+                clearPreview();
                 lastAutoImport.current = '';
               }}
             >
@@ -225,20 +300,28 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
             </button>
           </header>
           <p>{preview.parser_note}</p>
-          <ul>
-            {preview.ingredients.slice(0, 8).map((ing) => (
-              <li key={`${ing.name}-${ing.quantity}`}>
-                {ing.name} · {ing.quantity} {ing.unit}
-              </li>
+          {importBusy && <p role="status">Preparing ingredient list…</p>}
+          <div className="preview-ingredients">
+            {preview.ingredients.map((ing, index) => (
+              <div className="preview-ingredient" key={index}>
+                <span>{ing.name}</span>
+                <input type="number" min="0.001" max="1000" step="0.001"
+                  aria-label={`Preview quantity for ${ing.name}`}
+                  value={ing.quantity} disabled={importBusy || savingPreview}
+                  onChange={(e) => updateIngredient(index, { quantity: e.target.value })} />
+                <select aria-label={`Preview unit for ${ing.name}`} value={ing.unit}
+                  disabled={importBusy || savingPreview}
+                  onChange={(e) => updateIngredient(index, { unit: e.target.value })}>
+                  {['lb', 'L', 'each'].map((unit) => <option key={unit}>{unit}</option>)}
+                </select>
+              </div>
             ))}
-            {preview.ingredients.length > 8 && (
-              <li>+{preview.ingredients.length - 8} more…</li>
-            )}
-          </ul>
+          </div>
+          {preview.toddler_tip && <p><strong>Toddler notes</strong> · {preview.toddler_tip}</p>}
           <div className="preview-actions">
             <button
               type="button"
-              disabled={busy}
+              disabled={busy || importBusy || savingPreview || !validPreview}
               onClick={() => persistPreview(false)}
             >
               Save to favorites
@@ -246,21 +329,21 @@ export function CookbookBar({ target, days, busy, onApplyMeal }) {
             <button
               type="button"
               className="primary compact"
-              disabled={busy}
+              disabled={busy || importBusy || savingPreview || !validPreview}
               onClick={() => persistPreview(true)}
             >
-              Save & add to {days[target]} <ArrowRight size={14} />
+              Add to {days[target]} <ArrowRight size={14} />
             </button>
           </div>
         </article>
       )}
       <div className="favorite-chips cookbook-chips">
-        {dishes.map((d) => (
+        {visibleDishes.map((d) => (
           <span className="chip-wrap" key={d.id}>
-            <button type="button" disabled={busy} onClick={() => pickDish(d)} title={d.name_en}>
+            <button type="button" disabled={busy} onMouseDown={(e) => e.preventDefault()} onClick={() => pickDish(d)} title={d.name_en}>
               <DishThumb src={dishImage(d)} alt={d.display_name} />
               <Plus size={13} />
-              {d.display_name}
+              <span className={`dish-chip-name ${d.display_name.length > 85 ? 'dish-chip-name-long' : ''}`}>{d.display_name}</span>
             </button>
             {d.deletable && (
               <button

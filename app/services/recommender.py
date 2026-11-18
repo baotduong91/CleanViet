@@ -3,6 +3,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from app.services.ingredients import INGREDIENTS, normalize
 from app.services.meal_transform import apply_preferences
+from app.services.ingredient_search import search_ingredients
 
 STORES = {
     "greens": dict(
@@ -145,6 +146,7 @@ def recommend(meals, checked=(), preferences=None):
         stores[specialty]["items"].append(
             dict(
                 id=line_id,
+                url=item.get("url") or (known.get("url") if known else None),
                 name=display_name(item, known, key),
                 quantity=cents(qty),
                 unit=item["unit"],
@@ -157,7 +159,7 @@ def recommend(meals, checked=(), preferences=None):
         )
     for route in groups.values():
         route["stores"].sort(key=lambda s: s.get("stop_order", 99))
-    savings = baseline - cost + broth_arbitrage
+    savings = baseline - cost
     basis = (
         "Estimated USD for unchecked quantities. Excludes full-package overage, fees, "
         "fuel and takeout. Checked = already covered or purchased; no pantry inventory changes."
@@ -176,20 +178,15 @@ def recommend(meals, checked=(), preferences=None):
 
 
 def item_intel(query):
-    n = normalize(query)
-    exact = [
-        i
-        for i in INGREDIENTS.values()
-        if n in i["aliases"] or n == normalize(i["name"])
-    ]
-    candidates = exact or list(INGREDIENTS.values())
     return [
         dict(
-            ingredient=i,
-            store=STORES[i["specialty"]],
-            basis="Household heuristic; estimated unit prices and current stock are unverified.",
+            ingredient=item,
+            store=STORES[item["specialty"]],
+            basis=(
+                "Estimated unit prices; current stock and price are unverified."
+                if item["local_price"] is not None
+                else "No price benchmark for this cut or ingredient. Compare current store prices."
+            ),
         )
-        for i in candidates
-        if n
-        and (n in normalize(i["name"]) or any(n in a or a in n for a in i["aliases"]))
-    ][:8]
+        for item in search_ingredients(query)
+    ]

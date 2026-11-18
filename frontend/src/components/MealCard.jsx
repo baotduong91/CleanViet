@@ -1,4 +1,6 @@
-import { Home, LoaderCircle, Plus, TrainFront, X } from 'lucide-react';
+import { Home, LoaderCircle, Plus, TrainFront, X, RefreshCw } from 'lucide-react';
+import { RecipeSearchAutocomplete } from './RecipeSearchAutocomplete.jsx';
+import { useState } from 'react';
 import { estimateMacros } from '../utils/workflow.js';
 
 export function MealCard({
@@ -9,8 +11,12 @@ export function MealCard({
   packLunch,
   onUpdate,
   onParse,
+  onSelectSuggestion,
   onPackLunchChange,
+  onSave,
+  canSave,
 }) {
+  const [pendingSave, setPendingSave] = useState(null);
   const macros = estimateMacros(meal.ingredients, {
     leanMode,
     packLunch: !!packLunch?.[index],
@@ -26,12 +32,12 @@ export function MealCard({
       </p>
       {leanMode && (
         <p className="lean-badge">
-          Lean tweak: -25% carbs, +30% volume mushrooms/greens (-140 kcal)
+          −25% carbs · +30% vegetables
         </p>
       )}
       <span className={`day-badge ${index === 2 ? 'wfh' : ''}`}>
         {index === 2 ? <Home size={12} /> : <TrainFront size={12} />}{' '}
-        {index === 2 ? 'WFH · Flexible Prep' : 'Commute Day · Fast Prep / <20 mins'}
+        {index === 2 ? 'WFH' : 'Commute'}
       </span>
       <label className="pack-lunch">
         <input
@@ -39,17 +45,20 @@ export function MealCard({
           checked={!!packLunch?.[index]}
           onChange={(e) => onPackLunchChange(index, e.target.checked)}
         />
-        🍱 Pack Tomorrow&apos;s Office Lunch
+        Pack lunch
       </label>
       <label className="dish-label" htmlFor={`dish-${index}`}>
-        What sounds good?
+        Dish
       </label>
-      <textarea
+      <RecipeSearchAutocomplete
         id={`dish-${index}`}
         value={meal.dish_name}
-        maxLength={200}
-        placeholder="Type any dish…"
-        onChange={(e) => onUpdate({ dish_name: e.target.value })}
+        label={`Dish for ${meal.day}`}
+        placeholder="Type a dish…"
+        multiline
+        disabled={busy}
+        onChange={(text) => onUpdate({ dish_name: text })}
+        onSelect={onSelectSuggestion}
       />
       <input
         className="history-input"
@@ -70,7 +79,7 @@ export function MealCard({
         Suggest ingredients
       </button>
       <div className="ingredients-title">
-        GROCERY TAGS <span>{meal.ingredients.length}</span>
+        Ingredients <span>{meal.ingredients.length}</span>
       </div>
       <div className="ingredient-list">
         {meal.ingredients.map((item, j) => (
@@ -121,6 +130,16 @@ export function MealCard({
             </select>
             <button
               type="button"
+              className="icon ingredient-save"
+              disabled={busy || !canSave}
+              title="Save grocery changes"
+              aria-label={`Save changes for ${item.name || 'ingredient'}`}
+              onClick={() => setPendingSave(j)}
+            >
+              <RefreshCw size={13} />
+            </button>
+            <button
+              type="button"
               className="icon"
               aria-label={`Remove ${item.name}`}
               onClick={() =>
@@ -131,6 +150,13 @@ export function MealCard({
             >
               <X size={12} />
             </button>
+            {pendingSave === j && (
+              <div className="ingredient-save-confirm" role="dialog" aria-label="Confirm grocery update">
+                <span>Save dishes and update shopping list?</span>
+                <button type="button" disabled={busy || !canSave} onClick={() => { setPendingSave(null); onSave(); }}>Save</button>
+                <button type="button" onClick={() => setPendingSave(null)}>Cancel</button>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -149,10 +175,10 @@ export function MealCard({
         <Plus size={13} /> Add ingredient manually
       </button>
       <p className="parser-note">
-        {meal.parser_note || 'Any cuisine is welcome. Suggestions are editable.'}
+        {meal.parser_note || 'Review quantities.'}
       </p>
       <div className="toddler">
-        <label htmlFor={`tip-${index}`}>LITTLE BOWL, SAME DINNER</label>
+        <label htmlFor={`tip-${index}`}>Toddler notes</label>
         <textarea
           id={`tip-${index}`}
           value={meal.toddler_tip}

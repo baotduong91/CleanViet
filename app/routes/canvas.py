@@ -1,4 +1,5 @@
 import json
+import httpx
 from datetime import date
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -7,12 +8,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db import session_dependency
 from app.services.ingredients import FAVORITES, normalize
-from app.services.cookbook_catalog import list_dishes
+from app.services.cookbook_catalog import DISHES, list_dishes
 from app.services.cookbook_store import delete_saved, list_saved, save_dish
-from app.services.live_prices import live_check, sync_all_staples
+from app.services.live_prices import live_check, sync_all_staples, flyer_snapshot, save_flyer_snapshot
 from app.services.parser import ParsedMeal, parse_dish, parsed_from_import
 from app.services.dish_photos import cache_dish_photo
 from app.services.recipe_import import import_recipe_url
+from app.services.recipe_autocomplete import autocomplete, clean_title
+from app.services.icon_parser import resolve_dish_icon
 from app.services.recommender import STORES, item_intel, recommend
 from app.services.community_insights import fetch_insights
 
@@ -78,6 +81,40 @@ async def parse(body: ParseRequest):
         raise HTTPException(422, str(exc)) from exc
 
 
+class SuggestionRequest(BaseModel):
+    title_clean: str = Field(min_length=1, max_length=200)
+    source_url: str | None = Field(default=None, max_length=500)
+    catalog_id: str | None = Field(default=None, max_length=100)
+
+
+@router.get("/cookbook/autocomplete")
+async def cookbook_autocomplete(q: str = Query("", max_length=200)):
+    return await autocomplete(q)
+
+
+@router.post("/cookbook/select-suggestion")
+async def select_suggestion(body: SuggestionRequest):
+    title = clean_title(body.title_clean)
+    if not title:
+        raise HTTPException(422, "Enter a dish title.")
+    if body.catalog_id:
+        dish = next((d for d in DISHES if d.id == body.catalog_id), None)
+        if dish is None:
+            raise HTTPException(422, "Unknown catalog dish.")
+        title = dish.display_name
+    meal = parse_dish(title)
+    if body.source_url:
+        try:
+            imported_title, items, note, _ = await import_recipe_url(body.source_url, family_servings=2.5)
+            meal = parsed_from_import(title, items, note)
+        except (ValueError, httpx.HTTPError, OSError):
+            meal = parse_dish(title)
+            meal.parser_note = "Source recipe unavailable or partial. Family ingredient estimates; review quantities."
+    icon = resolve_dish_icon(title)["icon"]
+    meal.dish_name = f"{icon} {title}"[:200]
+    return meal
+
+
 @router.get("/cookbook")
 async def cookbook(
     category: str = Query("", max_length=40),
@@ -137,10 +174,15 @@ async def prices_live(q: str = Query(min_length=1, max_length=120), zip_code: st
     return await live_check(q, zip_code)
 
 
+@router.get("/prices/flyer-status")
+async def flyer_status():
+    return flyer_snapshot()
+
+
 @router.post("/prices/sync-flyers")
 async def prices_sync():
     deals = await sync_all_staples()
-    return dict(deals=deals, count=len(deals))
+    return dict(**save_flyer_snapshot(deals), count=len(deals))
 
 
 @router.get("/meals/history")
@@ -203,6 +245,19 @@ async def save(body: CanvasRequest, session: AsyncSession = DB):
         **payload,
         shopping=recommend(payload["meals"], payload["checked"], prefs),
     )
+
+
+@router.get("/canvas/previous")
+async def previous_canvas(before: date, session: AsyncSession = DB):
+    row = (await session.execute(
+        text("SELECT week_start,payload FROM meal_canvases WHERE week_start < :before "
+             "AND jsonb_array_length(payload->'meals') = 4 ORDER BY week_start DESC LIMIT 1"),
+        {"before": before},
+    )).mappings().first()
+    if not row:
+        return {"source_week": None, "meals": [], "shopping": None}
+    meals = row["payload"]["meals"]
+    return {"source_week": str(row["week_start"]), "meals": meals, "shopping": recommend(meals)}
 
 
 @router.get("/canvas")

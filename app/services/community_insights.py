@@ -1,5 +1,6 @@
 """Official Google Places review sampling. No provider content is persisted."""
 
+from urllib.parse import quote
 from datetime import datetime, timedelta, timezone
 import httpx
 from app.config import settings
@@ -52,10 +53,12 @@ def analyze_reviews(reviews, now=None):
 
 async def fetch_insights(store_id):
     store = STORES[store_id]
+    maps_url = f"https://www.google.com/maps/search/?api=1&query={quote(store['query'] or store['name'])}"
     if not settings.google_places_api_key or not store["query"]:
         return dict(
             status="not_configured",
-            summary="Live reviews unavailable. Household specialty heuristic only; inventory unverified.",
+            url=maps_url,
+            summary="Review summaries are unavailable. Use View store reviews to open Google Maps.",
             reviews=[],
         )
     try:
@@ -72,7 +75,7 @@ async def fetch_insights(store_id):
             places = r.json().get("places", [])
         if not places:
             return dict(
-                status="no_match", summary="No matching place returned.", reviews=[]
+                status="no_match", summary="No matching place returned. Open Google Maps to select a store.", reviews=[], url=maps_url
             )
         place = places[0]
         reviews = analyze_reviews(place.get("reviews", []))
@@ -89,6 +92,7 @@ async def fetch_insights(store_id):
     except (httpx.HTTPError, ValueError):
         return dict(
             status="unavailable",
+            url=maps_url,
             summary="Review provider unavailable; check stock with the store.",
             reviews=[],
         )

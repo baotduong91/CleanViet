@@ -22,8 +22,8 @@ export function TodaysModeWidget({ meals, preferences, onPreferencesChange }) {
         aria-expanded={open}
       >
         <div>
-          <span className="eyebrow">TODAY&apos;S MODE</span>
-          <strong>{handoff ? '6 PM Kitchen Handoff' : 'Plan ahead'}</strong>
+          <span className="eyebrow">Options</span>
+          <strong>{handoff ? 'Tonight' : 'Meal options'}</strong>
           {lunch.count > 0 && (
             <span className="today-badge">
               Office lunches prepped: {lunch.count} (+${lunch.saved.toFixed(2)} saved vs
@@ -43,14 +43,14 @@ export function TodaysModeWidget({ meals, preferences, onPreferencesChange }) {
                 onPreferencesChange({ store_mode: !preferences?.store_mode })
               }
             >
-              🛒 Store Mode
+              Store mode
             </button>
             <button
               type="button"
               className={preferences?.lean_mode ? 'toggle-on' : ''}
               onClick={() => onPreferencesChange({ lean_mode: !preferences?.lean_mode })}
             >
-              ⚡ Target: Lean / Deficit
+              Lean portions
             </button>
           </div>
           {handoff && meal?.dish_name?.trim() && (
@@ -64,7 +64,7 @@ export function TodaysModeWidget({ meals, preferences, onPreferencesChange }) {
               </ol>
               {meal.toddler_tip && (
                 <div className="handoff-toddler">
-                  <span>LITTLE BOWL, SAME DINNER</span>
+                  <span>Toddler notes</span>
                   <p>{meal.toddler_tip}</p>
                 </div>
               )}
